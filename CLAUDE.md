@@ -17,7 +17,7 @@ ant
 
 ### Running JaamSim
 ```bash
-# Run with a configuration file
+# Standard run with a configuration file
 java -jar JaamSim2022-06.jar config_file.cfg
 
 # Example with the 1-up station simulation
@@ -25,6 +25,22 @@ java -jar cfg/JaamSim2022-06.jar cfg/1up/1-up-station-simulation.cfg
 
 # Run with tags (for debugging/development)
 java -jar JaamSim.jar config1.cfg -tags
+```
+
+### macOS Setup (Apple Silicon)
+For Apple Silicon Macs, run the setup script first:
+```bash
+source ./setup-macos.sh
+```
+
+Or set the environment variable manually:
+```bash
+export JAVA_TOOL_OPTIONS="-Djava.library.path=natives/macosx-universal -Djogamp.gluegen.UseTempJarCache=false"
+```
+
+After setup, the standard commands work normally:
+```bash
+java -jar cfg/JaamSim2022-06.jar cfg/1up/1-up-station-simulation.cfg
 ```
 
 ### Testing
@@ -71,6 +87,7 @@ The system is organized into object palettes:
 
 ### Dependencies
 - JOGL2 (3D graphics) - JAR files in `/jar/` directory
+- Native libraries in `/natives/` directory for local library loading
 - All dependencies are self-contained in the repository
 
 ## Development Notes
@@ -81,3 +98,29 @@ The system is organized into object palettes:
 - Event-driven simulation architecture
 - Extensive configuration file system for model definition
 - Built-in examples and documentation in resources folder
+
+## macOS Specific Notes
+
+### Apple Silicon Compatibility
+The macOS branch includes updated JOGL 2.5.0 libraries with Apple Silicon (M1/M2/M3) support:
+- Updated `jar/` directory with latest JOGL libraries
+- Added `natives/macosx-universal/` directory with native libraries for direct loading
+- Use `-Djogamp.gluegen.UseTempJarCache=false` flag to avoid temporary directory issues
+
+### Running on macOS
+On Apple Silicon Macs, set up the environment first:
+```bash
+source ./setup-macos.sh
+```
+
+Then use standard commands:
+```bash
+java -jar cfg/JaamSim2022-06.jar cfg/1up/1-up-station-simulation.cfg
+# OR use the launcher script:
+./jaamsim.sh cfg/1up/1-up-station-simulation.cfg
+```
+
+### Technical Details
+The issue on Apple Silicon is that JOGL's JAR extraction process corrupts universal binaries, extracting only the x86_64 slice instead of the proper arm64 version. The solution forces JOGL to use local native libraries instead of temp extraction.
+
+The NSWindow warnings that appear in console output are cosmetic and don't affect functionality.

@@ -1,0 +1,2 @@
+-Djava.library.path=natives/macosx-universal
+-Djogamp.gluegen.UseTempJarCache=false
