@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JaamSim Remote Control - 100% Fidelity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 10px 20px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #00ff88;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.connected {
+            background: #00ff88;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .control-panel {
+            width: 350px;
+            background: #2d2d2d;
+            border-right: 1px solid #444;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .screen-container {
+            flex: 1;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .jaamsim-screen {
+            max-width: 100%;
+            max-height: 100%;
+            border: 2px solid #444;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .loading-message {
+            color: #888;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+        }
+
+        .config-selector {
+            width: 100%;
+            padding: 10px;
+            background: #3d3d3d;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin: 5px;
+            width: calc(50% - 10px);
+        }
+
+        .btn:hover {
+            background: #0077dd;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.danger {
+            background: #cc4444;
+        }
+
+        .btn.danger:hover {
+            background: #dd5555;
+        }
+
+        .btn.success {
+            background: #44cc44;
+        }
+
+        .btn.success:hover {
+            background: #55dd55;
+        }
+
+        .btn.full-width {
+            width: calc(100% - 10px);
+        }
+
+        .command-input {
+            width: 100%;
+            padding: 8px;
+            background: #3d3d3d;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px;
+        }
+
+        .log-entry.stdout {
+            color: #88ff88;
+        }
+
+        .log-entry.stderr {
+            color: #ff8888;
+        }
+
+        .log-entry.info {
+            color: #88ddff;
+        }
+
+        .log-entry.error {
+            color: #ff4444;
+        }
+
+        .config-upload {
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            background: #3d3d3d;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .timestamp {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .connection-status {
+            text-align: center;
+            padding: 20px;
+            background: #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .fps-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .control-panel {
+                width: 100%;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JaamSim Remote Control</h1>
+        <div class="status">
+            <div id="statusIndicator" class="status-indicator"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="control-panel">
+            <div class="connection-status">
+                <div id="connectionStatus">Connecting to server...</div>
+            </div>
+
+            <div class="section">
+                <h3>Configuration</h3>
+                <div class="config-upload">
+                    <input type="file" id="configUpload" class="file-input" accept=".cfg" />
+                    <button id="uploadBtn" class="btn full-width">Upload Config</button>
+                </div>
+                <select id="configSelector" class="config-selector">
+                    <option value="">Select configuration...</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h3>JaamSim Control</h3>
+                <button id="startBtn" class="btn success">Start</button>
+                <button id="stopBtn" class="btn danger">Stop</button>
+                <button id="screenshotBtn" class="btn full-width">Capture Screenshot</button>
+            </div>
+
+            <div class="section">
+                <h3>Commands</h3>
+                <input type="text" id="commandInput" class="command-input" placeholder="Enter JaamSim command..." />
+                <button id="sendCommandBtn" class="btn full-width">Send Command</button>
+            </div>
+
+            <div class="section">
+                <h3>Output Log</h3>
+                <div id="logContainer" class="log-container"></div>
+                <button id="clearLogBtn" class="btn full-width">Clear Log</button>
+            </div>
+        </div>
+
+        <div class="screen-container">
+            <div id="loadingMessage" class="loading-message">
+                Waiting for JaamSim to start...
+            </div>
+            <img id="jaamSimScreen" class="jaamsim-screen" style="display: none;" alt="JaamSim Screen" />
+            <div id="timestamp" class="timestamp" style="display: none;"></div>
+            <div id="fpsCounter" class="fps-counter" style="display: none;">FPS: 0</div>
+        </div>
+    </div>
+
+    <script>
+        class JaamSimClient {
+            constructor() {
+                this.ws = null;
+                this.isConnected = false;
+                this.frameCount = 0;
+                this.lastFpsUpdate = Date.now();
+                this.setupElements();
+                this.connect();
+                this.setupEventListeners();
+            }
+
+            setupElements() {
+                this.elements = {
+                    statusIndicator: document.getElementById('statusIndicator'),
+                    statusText: document.getElementById('statusText'),
+                    connectionStatus: document.getElementById('connectionStatus'),
+                    configSelector: document.getElementById('configSelector'),
+                    configUpload: document.getElementById('configUpload'),
+                    uploadBtn: document.getElementById('uploadBtn'),
+                    startBtn: document.getElementById('startBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    screenshotBtn: document.getElementById('screenshotBtn'),
+                    commandInput: document.getElementById('commandInput'),
+                    sendCommandBtn: document.getElementById('sendCommandBtn'),
+                    logContainer: document.getElementById('logContainer'),
+                    clearLogBtn: document.getElementById('clearLogBtn'),
+                    loadingMessage: document.getElementById('loadingMessage'),
+                    jaamSimScreen: document.getElementById('jaamSimScreen'),
+                    timestamp: document.getElementById('timestamp'),
+                    fpsCounter: document.getElementById('fpsCounter')
+                };
+            }
+
+            connect() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}`;
+                
+                this.ws = new WebSocket(wsUrl);
+
+                this.ws.onopen = () => {
+                    this.isConnected = true;
+                    this.updateConnectionStatus(true);
+                    this.log('Connected to JaamSim server', 'info');
+                    this.loadConfigurations();
+                };
+
+                this.ws.onclose = () => {
+                    this.isConnected = false;
+                    this.updateConnectionStatus(false);
+                    this.log('Disconnected from server', 'error');
+                    
+                    // Attempt to reconnect after 3 seconds
+                    setTimeout(() => {
+                        if (!this.isConnected) {
+                            this.log('Attempting to reconnect...', 'info');
+                            this.connect();
+                        }
+                    }, 3000);
+                };
+
+                this.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this.handleMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
+                    }
+                };
+
+                this.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    this.log('Connection error', 'error');
+                };
+            }
+
+            updateConnectionStatus(connected) {
+                if (connected) {
+                    this.elements.statusIndicator.classList.add('connected');
+                    this.elements.statusText.textContent = 'Connected';
+                    this.elements.connectionStatus.textContent = 'Connected to JaamSim server';
+                } else {
+                    this.elements.statusIndicator.classList.remove('connected');
+                    this.elements.statusText.textContent = 'Disconnected';
+                    this.elements.connectionStatus.textContent = 'Disconnected from server';
+                }
+            }
+
+            handleMessage(data) {
+                switch (data.type) {
+                    case 'screenshot':
+                        this.updateScreenshot(data.data);
+                        break;
+                    case 'jaamSimStarted':
+                        this.log(`JaamSim started with config: ${data.data.configFile}`, 'info');
+                        this.updateButtonStates(true);
+                        break;
+                    case 'jaamSimStopped':
+                        this.log('JaamSim stopped', 'info');
+                        this.updateButtonStates(false);
+                        this.hideScreenshot();
+                        break;
+                    case 'jaamSimError':
+                        this.log(`JaamSim error: ${data.data.error}`, 'error');
+                        break;
+                    case 'jaamSimOutput':
+                        this.log(data.data.output, data.data.type);
+                        break;
+                    case 'commandSent':
+                        this.log(`Command sent: ${data.data.command}`, 'info');
+                        break;
+                    case 'status':
+                        this.updateButtonStates(data.data.jaamSimRunning);
+                        break;
+                    case 'error':
+                        this.log(`Error: ${data.data.message}`, 'error');
+                        break;
+                }
+            }
+
+            updateScreenshot(data) {
+                this.elements.jaamSimScreen.src = data.image;
+                this.elements.jaamSimScreen.style.display = 'block';
+                this.elements.loadingMessage.style.display = 'none';
+                this.elements.timestamp.style.display = 'block';
+                this.elements.fpsCounter.style.display = 'block';
+                
+                // Update timestamp
+                this.elements.timestamp.textContent = new Date(data.timestamp).toLocaleTimeString();
+                
+                // Update FPS counter
+                this.frameCount++;
+                const now = Date.now();
+                if (now - this.lastFpsUpdate >= 1000) {
+                    const fps = Math.round(this.frameCount * 1000 / (now - this.lastFpsUpdate));
+                    this.elements.fpsCounter.textContent = `FPS: ${fps}`;
+                    this.frameCount = 0;
+                    this.lastFpsUpdate = now;
+                }
+            }
+
+            hideScreenshot() {
+                this.elements.jaamSimScreen.style.display = 'none';
+                this.elements.loadingMessage.style.display = 'block';
+                this.elements.timestamp.style.display = 'none';
+                this.elements.fpsCounter.style.display = 'none';
+                this.elements.loadingMessage.textContent = 'JaamSim is not running';
+            }
+
+            updateButtonStates(jaamSimRunning) {
+                this.elements.startBtn.disabled = jaamSimRunning;
+                this.elements.stopBtn.disabled = !jaamSimRunning;
+                this.elements.sendCommandBtn.disabled = !jaamSimRunning;
+            }
+
+            setupEventListeners() {
+                this.elements.startBtn.addEventListener('click', () => {
+                    const configFile = this.elements.configSelector.value;
+                    if (!configFile) {
+                        alert('Please select a configuration file');
+                        return;
+                    }
+                    this.startJaamSim(configFile);
+                });
+
+                this.elements.stopBtn.addEventListener('click', () => {
+                    this.stopJaamSim();
+                });
+
+                this.elements.screenshotBtn.addEventListener('click', () => {
+                    this.requestScreenshot();
+                });
+
+                this.elements.sendCommandBtn.addEventListener('click', () => {
+                    this.sendCommand();
+                });
+
+                this.elements.commandInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendCommand();
+                    }
+                });
+
+                this.elements.clearLogBtn.addEventListener('click', () => {
+                    this.elements.logContainer.innerHTML = '';
+                });
+
+                this.elements.uploadBtn.addEventListener('click', () => {
+                    this.uploadConfiguration();
+                });
+            }
+
+            async loadConfigurations() {
+                try {
+                    const response = await fetch('/api/configs');
+                    const data = await response.json();
+                    
+                    this.elements.configSelector.innerHTML = '<option value="">Select configuration...</option>';
+                    
+                    data.configs.forEach(config => {
+                        const option = document.createElement('option');
+                        option.value = config.path;
+                        option.textContent = `${config.category}/${config.name}`;
+                        this.elements.configSelector.appendChild(option);
+                    });
+                    
+                    this.log(`Loaded ${data.configs.length} configurations`, 'info');
+                } catch (error) {
+                    this.log('Failed to load configurations', 'error');
+                }
+            }
+
+            async startJaamSim(configFile) {
+                try {
+                    const response = await fetch('/api/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ configFile })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to start JaamSim');
+                    }
+                    
+                    this.log('Starting JaamSim...', 'info');
+                } catch (error) {
+                    this.log(`Error starting JaamSim: ${error.message}`, 'error');
+                }
+            }
+
+            async stopJaamSim() {
+                try {
+                    const response = await fetch('/api/stop', {
+                        method: 'POST'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to stop JaamSim');
+                    }
+                    
+                    this.log('Stopping JaamSim...', 'info');
+                } catch (error) {
+                    this.log(`Error stopping JaamSim: ${error.message}`, 'error');
+                }
+            }
+
+            requestScreenshot() {
+                if (this.isConnected) {
+                    this.ws.send(JSON.stringify({
+                        type: 'requestScreenshot'
+                    }));
+                }
+            }
+
+            sendCommand() {
+                const command = this.elements.commandInput.value.trim();
+                if (!command) return;
+
+                if (this.isConnected) {
+                    this.ws.send(JSON.stringify({
+                        type: 'sendCommand',
+                        command: command
+                    }));
+                    this.elements.commandInput.value = '';
+                }
+            }
+
+            async uploadConfiguration() {
+                const file = this.elements.configUpload.files[0];
+                if (!file) {
+                    alert('Please select a configuration file');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('configFile', file);
+
+                try {
+                    const response = await fetch('/api/upload-config', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Upload failed');
+                    }
+
+                    const result = await response.json();
+                    this.log(`Configuration uploaded: ${result.filename}`, 'info');
+                    this.loadConfigurations(); // Reload config list
+                } catch (error) {
+                    this.log(`Upload error: ${error.message}`, 'error');
+                }
+            }
+
+            log(message, type = 'info') {
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                
+                this.elements.logContainer.appendChild(logEntry);
+                this.elements.logContainer.scrollTop = this.elements.logContainer.scrollHeight;
+            }
+        }
+
+        // Initialize the client when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new JaamSimClient();
+        });
+    </script>
+</body>
+</html>

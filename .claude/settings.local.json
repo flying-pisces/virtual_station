@@ -6,7 +6,10 @@
       "Bash(java:*)",
       "Bash(JaamSim.exe:*)",
       "Bash(./JaamSim.exe cfg/1up/1-up-station-simulation.cfg)",
-      "Bash(ant:*)"
+      "Bash(ant:*)",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

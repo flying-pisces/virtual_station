@@ -1,0 +1,30 @@
+{
+  "name": "jaamsim-server-wrapper",
+  "version": "1.0.0",
+  "description": "Server-side wrapper for JaamSim with web interface",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [
+    "jaamsim",
+    "simulation",
+    "manufacturing",
+    "wrapper"
+  ],
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "screenshot-desktop": "^1.12.7",
+    "node-stream-zip": "^1.15.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
