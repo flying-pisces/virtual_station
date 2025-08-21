@@ -17,6 +17,8 @@ class OneUpSimulation {
             failedCount: 0
         };
         this.config = this.getDefaultConfig();
+        this.animationEngine = null;
+        this.dutTracker = new Map(); // Track DUTs for animation
         this.setupEventListeners();
         this.updateInterval = null;
     }
@@ -122,6 +124,16 @@ class OneUpSimulation {
 
         this.engine.on('dutGenerated', (data) => {
             this.updateStationCount('generator', this.entities.generator.generatedCount);
+            
+            // Add DUT to animation
+            if (this.animationEngine) {
+                const animDUT = this.animationEngine.addDUT(data.dut);
+                this.dutTracker.set(data.dut.id, {
+                    dut: data.dut,
+                    animDUT: animDUT,
+                    currentStation: 'generator'
+                });
+            }
         });
 
         this.engine.on('dutEnterQueue', (data) => {
@@ -130,6 +142,18 @@ class OneUpSimulation {
 
         this.engine.on('dutLeaveQueue', (data) => {
             this.updateQueueCounts();
+            
+            // Animate DUT movement
+            if (this.animationEngine && this.dutTracker.has(data.dut.id)) {
+                const tracker = this.dutTracker.get(data.dut.id);
+                const fromStation = this.getStationIdFromComponent(data.queue);
+                const toStation = this.getStationIdFromComponent(data.queue.nextComponent);
+                
+                if (fromStation && toStation) {
+                    this.animationEngine.moveDUT(data.dut.id, fromStation, toStation);
+                    tracker.currentStation = toStation;
+                }
+            }
         });
 
         this.engine.on('dutStartProcessing', (data) => {
@@ -139,10 +163,45 @@ class OneUpSimulation {
         this.engine.on('dutFinishProcessing', (data) => {
             this.updateStationVisuals(data.server.id, 'idle');
             this.updateStationCount(data.server.id, data.server.numberProcessed);
+            
+            // Animate DUT to next station
+            if (this.animationEngine && this.dutTracker.has(data.dut.id)) {
+                const tracker = this.dutTracker.get(data.dut.id);
+                const fromStation = data.server.id;
+                const toStation = this.getStationIdFromComponent(data.server.nextComponent);
+                
+                if (toStation) {
+                    this.animationEngine.moveDUT(data.dut.id, fromStation, toStation);
+                    tracker.currentStation = toStation;
+                }
+            }
+        });
+
+        this.engine.on('dutRouted', (data) => {
+            // Handle branch routing animation
+            if (this.animationEngine && this.dutTracker.has(data.dut.id)) {
+                const tracker = this.dutTracker.get(data.dut.id);
+                const fromStation = 'branch';
+                let toStation = '';
+                
+                if (data.dut.type === 'good') toStation = 'measure';
+                else if (data.dut.type === 'relit') toStation = 'rework';
+                else toStation = 'fa';
+                
+                this.animationEngine.moveDUT(data.dut.id, fromStation, toStation);
+                tracker.currentStation = toStation;
+            }
         });
 
         this.engine.on('dutComplete', (data) => {
             this.updateStationCount('unload', data.sink.numberProcessed);
+            
+            // Remove DUT from animation
+            if (this.animationEngine && this.dutTracker.has(data.dut.id)) {
+                this.animationEngine.removeDUT(data.dut.id);
+                this.dutTracker.delete(data.dut.id);
+            }
+            
             // Update DUT type counts
             if (data.dut.type === 'good') this.metrics.goodCount++;
             else if (data.dut.type === 'relit') this.metrics.relitCount++;
@@ -203,6 +262,11 @@ class OneUpSimulation {
         if (element) {
             element.textContent = count;
         }
+        
+        // Update animation engine station count
+        if (this.animationEngine) {
+            this.animationEngine.updateStationCount(stationId, count);
+        }
     }
 
     updateStationVisuals(stationId, state) {
@@ -214,16 +278,31 @@ class OneUpSimulation {
 
     start() {
         this.setupEntities();
+        
+        // Initialize animation engine
+        if (!this.animationEngine) {
+            this.animationEngine = new AnimationEngine('animation-canvas-1up', '1up');
+        }
+        this.animationEngine.start();
+        
         this.entities.generator.start();
         this.engine.start();
     }
 
     pause() {
         this.engine.pause();
+        if (this.animationEngine) {
+            this.animationEngine.pause();
+        }
     }
 
     reset() {
         this.engine.reset();
+        if (this.animationEngine) {
+            this.animationEngine.reset();
+        }
+        this.dutTracker.clear();
+        
         this.metrics = {
             totalTime: 0,
             totalProcessed: 0,
@@ -235,6 +314,22 @@ class OneUpSimulation {
         };
         this.updateUI();
         this.resetStationVisuals();
+    }
+
+    // Helper method to get station ID from component
+    getStationIdFromComponent(component) {
+        if (!component) return null;
+        
+        const componentMap = {
+            'generator': 'generator',
+            'branch': 'branch', 
+            'measurement': 'measure',
+            'rework': 'rework',
+            'fa': 'fa',
+            'unload': 'unload'
+        };
+        
+        return componentMap[component.id] || component.id;
     }
 
     resetStationVisuals() {

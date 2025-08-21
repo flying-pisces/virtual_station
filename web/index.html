@@ -75,49 +75,49 @@
                 </div>
 
                 <div class="visualization-panel">
-                    <h3>Station Flow</h3>
-                    <div id="flow-viz-1up" class="flow-diagram">
-                        <div class="station" id="generator-1up">
-                            <div class="station-icon">🏭</div>
-                            <div class="station-label">Generator</div>
-                            <div class="station-count">0</div>
+                    <h3>JaamSim-Style Animation</h3>
+                    <div id="animation-window-1up" class="animation-window">
+                        <canvas id="animation-canvas-1up" width="600" height="400"></canvas>
+                        <div class="animation-controls">
+                            <button id="zoom-in-1up" class="zoom-btn">🔍+</button>
+                            <button id="zoom-out-1up" class="zoom-btn">🔍-</button>
+                            <button id="reset-view-1up" class="zoom-btn">🔄</button>
+                            <span class="animation-status" id="animation-status-1up">Ready</span>
                         </div>
-                        <div class="conveyor" id="c1-1up"></div>
-                        <div class="station" id="branch-1up">
-                            <div class="station-icon">🔀</div>
-                            <div class="station-label">PTB</div>
-                            <div class="station-count">0</div>
-                        </div>
-                        <div class="flow-paths">
-                            <div class="path good-path">
-                                <div class="conveyor"></div>
-                                <div class="station" id="measure-1up">
-                                    <div class="station-icon">📊</div>
-                                    <div class="station-label">Measurement</div>
-                                    <div class="station-count">0</div>
-                                </div>
-                                <div class="conveyor"></div>
-                                <div class="station" id="unload-1up">
-                                    <div class="station-icon">📤</div>
-                                    <div class="station-label">Unload</div>
-                                    <div class="station-count">0</div>
-                                </div>
+                    </div>
+                    
+                    <div class="simplified-flow">
+                        <h4>Station Overview</h4>
+                        <div id="flow-viz-1up" class="flow-diagram">
+                            <div class="station" id="generator-1up">
+                                <div class="station-icon">🏭</div>
+                                <div class="station-label">Generator</div>
+                                <div class="station-count">0</div>
                             </div>
-                            <div class="path relit-path">
-                                <div class="conveyor"></div>
-                                <div class="station" id="rework-1up">
-                                    <div class="station-icon">🔧</div>
-                                    <div class="station-label">Rework</div>
-                                    <div class="station-count">0</div>
-                                </div>
+                            <div class="station" id="branch-1up">
+                                <div class="station-icon">🔀</div>
+                                <div class="station-label">PTB</div>
+                                <div class="station-count">0</div>
                             </div>
-                            <div class="path bad-path">
-                                <div class="conveyor"></div>
-                                <div class="station" id="fa-1up">
-                                    <div class="station-icon">❌</div>
-                                    <div class="station-label">Failure Analysis</div>
-                                    <div class="station-count">0</div>
-                                </div>
+                            <div class="station" id="measure-1up">
+                                <div class="station-icon">📊</div>
+                                <div class="station-label">Measurement</div>
+                                <div class="station-count">0</div>
+                            </div>
+                            <div class="station" id="rework-1up">
+                                <div class="station-icon">🔧</div>
+                                <div class="station-label">Rework</div>
+                                <div class="station-count">0</div>
+                            </div>
+                            <div class="station" id="fa-1up">
+                                <div class="station-icon">❌</div>
+                                <div class="station-label">FA</div>
+                                <div class="station-count">0</div>
+                            </div>
+                            <div class="station" id="unload-1up">
+                                <div class="station-icon">📤</div>
+                                <div class="station-label">Unload</div>
+                                <div class="station-count">0</div>
                             </div>
                         </div>
                     </div>
@@ -235,33 +235,46 @@
                 </div>
 
                 <div class="visualization-panel">
-                    <h3>Turn Table Flow</h3>
-                    <div id="flow-viz-3up" class="turntable-diagram">
-                        <div class="turntable-center">
-                            <div class="turntable-icon">🔄</div>
+                    <h3>JaamSim-Style Turn Table Animation</h3>
+                    <div id="animation-window-3up" class="animation-window">
+                        <canvas id="animation-canvas-3up" width="600" height="400"></canvas>
+                        <div class="animation-controls">
+                            <button id="zoom-in-3up" class="zoom-btn">🔍+</button>
+                            <button id="zoom-out-3up" class="zoom-btn">🔍-</button>
+                            <button id="reset-view-3up" class="zoom-btn">🔄</button>
+                            <span class="animation-status" id="animation-status-3up">Ready</span>
                         </div>
-                        
-                        <div class="station turntable-station" id="station1-3up" style="top: 20%; left: 50%;">
-                            <div class="station-icon">👤</div>
-                            <div class="station-label">Station 1<br>Load</div>
-                            <div class="station-count">0</div>
-                        </div>
-                        
-                        <div class="station turntable-station" id="station2-3up" style="top: 60%; left: 75%;">
-                            <div class="station-icon">📊</div>
-                            <div class="station-label">Station 2<br>AOI/Measurement</div>
-                            <div class="station-count">0</div>
-                        </div>
-                        
-                        <div class="station turntable-station" id="station3-3up" style="top: 60%; left: 25%;">
-                            <div class="station-icon">💾</div>
-                            <div class="station-label">Station 3<br>Data Logging</div>
-                            <div class="station-count">0</div>
-                        </div>
-                        
-                        <div class="container-queue" id="container-queue-3up">
-                            <div class="queue-label">Container Queue</div>
-                            <div class="queue-count">3</div>
+                    </div>
+                    
+                    <div class="simplified-flow">
+                        <h4>Turn Table Overview</h4>
+                        <div id="flow-viz-3up" class="turntable-diagram">
+                            <div class="turntable-center">
+                                <div class="turntable-icon">🔄</div>
+                            </div>
+                            
+                            <div class="station turntable-station" id="station1-3up" style="top: 20%; left: 50%;">
+                                <div class="station-icon">👤</div>
+                                <div class="station-label">Station 1<br>Load</div>
+                                <div class="station-count">0</div>
+                            </div>
+                            
+                            <div class="station turntable-station" id="station2-3up" style="top: 60%; left: 75%;">
+                                <div class="station-icon">📊</div>
+                                <div class="station-label">Station 2<br>AOI/Measurement</div>
+                                <div class="station-count">0</div>
+                            </div>
+                            
+                            <div class="station turntable-station" id="station3-3up" style="top: 60%; left: 25%;">
+                                <div class="station-icon">💾</div>
+                                <div class="station-label">Station 3<br>Data Logging</div>
+                                <div class="station-count">0</div>
+                            </div>
+                            
+                            <div class="container-queue" id="container-queue-3up">
+                                <div class="queue-label">Container Queue</div>
+                                <div class="queue-count">3</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -320,6 +333,7 @@
     </footer>
 
     <script src="js/simulation-engine.js"></script>
+    <script src="js/animation-engine.js"></script>
     <script src="js/1up-simulation.js"></script>
     <script src="js/3up-simulation.js"></script>
     <script src="js/main.js"></script>

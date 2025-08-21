@@ -90,6 +90,8 @@ class ThreeUpSimulation {
             downtimePercentage: 0
         };
         this.config = this.getDefaultConfig();
+        this.animationEngine = null;
+        this.dutTracker = new Map();
         this.setupEventListeners();
     }
 
@@ -342,6 +344,11 @@ class ThreeUpSimulation {
         if (element) {
             element.textContent = count;
         }
+        
+        // Update animation engine station count  
+        if (this.animationEngine) {
+            this.animationEngine.updateStationCount(stationId, count);
+        }
     }
 
     updateStationVisuals(stationId, state) {
@@ -353,6 +360,13 @@ class ThreeUpSimulation {
 
     start() {
         this.setupEntities();
+        
+        // Initialize animation engine
+        if (!this.animationEngine) {
+            this.animationEngine = new AnimationEngine('animation-canvas-3up', '3up');
+        }
+        this.animationEngine.start();
+        
         // Start both generators
         this.entities.generator.start();
         this.entities.containerGenerator.start();
@@ -361,10 +375,18 @@ class ThreeUpSimulation {
 
     pause() {
         this.engine.pause();
+        if (this.animationEngine) {
+            this.animationEngine.pause();
+        }
     }
 
     reset() {
         this.engine.reset();
+        if (this.animationEngine) {
+            this.animationEngine.reset();
+        }
+        this.dutTracker.clear();
+        
         this.metrics = {
             totalTime: 0,
             completedLoad: 0,
