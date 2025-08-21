@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(java:*)",
+      "Bash(JaamSim.exe:*)",
+      "Bash(./JaamSim.exe cfg/1up/1-up-station-simulation.cfg)",
+      "Bash(ant:*)"
+    ],
+    "deny": []
+  }
+}

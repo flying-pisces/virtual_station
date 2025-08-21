@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Station Simulations</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <header>
+        <h1>Virtual Manufacturing Station Simulations</h1>
+        <p>Web-based discrete event simulation of manufacturing test stations</p>
+    </header>
+
+    <nav class="simulation-selector">
+        <button id="btn-1up" class="sim-button active" onclick="selectSimulation('1up')">
+            1-Up Station
+        </button>
+        <button id="btn-3up" class="sim-button" onclick="selectSimulation('3up')">
+            3-Up Turn Table
+        </button>
+    </nav>
+
+    <main class="simulation-container">
+        <!-- 1-Up Station Simulation -->
+        <div id="sim-1up" class="simulation-panel active">
+            <div class="simulation-header">
+                <h2>1-Up Station Simulation</h2>
+                <div class="simulation-controls">
+                    <button id="start-1up" class="control-btn start">Start</button>
+                    <button id="pause-1up" class="control-btn pause">Pause</button>
+                    <button id="reset-1up" class="control-btn reset">Reset</button>
+                    <div class="speed-control">
+                        <label>Speed: <span id="speed-1up">1x</span></label>
+                        <input type="range" id="speed-slider-1up" min="1" max="16" value="1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="simulation-content">
+                <div class="input-panel">
+                    <h3>Input Parameters</h3>
+                    <div class="input-group">
+                        <label>Total DUT Amount:</label>
+                        <input type="number" id="total-dut-1up" value="100" min="1" max="10000">
+                    </div>
+                    <div class="input-group">
+                        <label>Good DUT %:</label>
+                        <input type="number" id="good-dut-1up" value="85" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Re-lit DUT %:</label>
+                        <input type="number" id="relit-dut-1up" value="10" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Load Time (s):</label>
+                        <input type="number" id="load-time-1up" value="10" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>Measurement Time (s):</label>
+                        <input type="number" id="measure-time-1up" value="9" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>PTB Time (s):</label>
+                        <input type="number" id="ptb-time-1up" value="5" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>PTB Retry Count:</label>
+                        <input type="number" id="ptb-retry-1up" value="3" min="1" max="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Unload Time (s):</label>
+                        <input type="number" id="unload-time-1up" value="5" min="1" max="60">
+                    </div>
+                </div>
+
+                <div class="visualization-panel">
+                    <h3>Station Flow</h3>
+                    <div id="flow-viz-1up" class="flow-diagram">
+                        <div class="station" id="generator-1up">
+                            <div class="station-icon">🏭</div>
+                            <div class="station-label">Generator</div>
+                            <div class="station-count">0</div>
+                        </div>
+                        <div class="conveyor" id="c1-1up"></div>
+                        <div class="station" id="branch-1up">
+                            <div class="station-icon">🔀</div>
+                            <div class="station-label">PTB</div>
+                            <div class="station-count">0</div>
+                        </div>
+                        <div class="flow-paths">
+                            <div class="path good-path">
+                                <div class="conveyor"></div>
+                                <div class="station" id="measure-1up">
+                                    <div class="station-icon">📊</div>
+                                    <div class="station-label">Measurement</div>
+                                    <div class="station-count">0</div>
+                                </div>
+                                <div class="conveyor"></div>
+                                <div class="station" id="unload-1up">
+                                    <div class="station-icon">📤</div>
+                                    <div class="station-label">Unload</div>
+                                    <div class="station-count">0</div>
+                                </div>
+                            </div>
+                            <div class="path relit-path">
+                                <div class="conveyor"></div>
+                                <div class="station" id="rework-1up">
+                                    <div class="station-icon">🔧</div>
+                                    <div class="station-label">Rework</div>
+                                    <div class="station-count">0</div>
+                                </div>
+                            </div>
+                            <div class="path bad-path">
+                                <div class="conveyor"></div>
+                                <div class="station" id="fa-1up">
+                                    <div class="station-icon">❌</div>
+                                    <div class="station-label">Failure Analysis</div>
+                                    <div class="station-count">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dut-indicators">
+                        <div class="dut-type good">
+                            <div class="dut-icon">✅</div>
+                            <span>Good DUT</span>
+                        </div>
+                        <div class="dut-type relit">
+                            <div class="dut-icon">🔄</div>
+                            <span>Re-lit DUT</span>
+                        </div>
+                        <div class="dut-type bad">
+                            <div class="dut-icon">❌</div>
+                            <span>Failed DUT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-panel">
+                    <h3>Output Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <label>Total Time:</label>
+                            <span id="total-time-1up">0.0 s</span>
+                        </div>
+                        <div class="metric">
+                            <label>Total Processed:</label>
+                            <span id="total-processed-1up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Measurement Utilization:</label>
+                            <span id="measure-util-1up">0.0%</span>
+                        </div>
+                        <div class="metric">
+                            <label>Downtime Percentage:</label>
+                            <span id="downtime-1up">0.0%</span>
+                        </div>
+                        <div class="metric">
+                            <label>Good DUT Count:</label>
+                            <span id="good-count-1up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Re-lit DUT Count:</label>
+                            <span id="relit-count-1up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Failed DUT Count:</label>
+                            <span id="failed-count-1up">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3-Up Turn Table Simulation -->
+        <div id="sim-3up" class="simulation-panel">
+            <div class="simulation-header">
+                <h2>3-Up Turn Table Simulation</h2>
+                <div class="simulation-controls">
+                    <button id="start-3up" class="control-btn start">Start</button>
+                    <button id="pause-3up" class="control-btn pause">Pause</button>
+                    <button id="reset-3up" class="control-btn reset">Reset</button>
+                    <div class="speed-control">
+                        <label>Speed: <span id="speed-3up">1x</span></label>
+                        <input type="range" id="speed-slider-3up" min="1" max="16" value="1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="simulation-content">
+                <div class="input-panel">
+                    <h3>Input Parameters</h3>
+                    <div class="input-group">
+                        <label>Total DUT Amount:</label>
+                        <input type="number" id="total-dut-3up" value="5000" min="1" max="10000">
+                    </div>
+                    <div class="input-group">
+                        <label>Good DUT %:</label>
+                        <input type="number" id="good-dut-3up" value="95" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Re-lit DUT %:</label>
+                        <input type="number" id="relit-dut-3up" value="3" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Operator Load Time (s):</label>
+                        <input type="number" id="op-load-time-3up" value="13" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>Measurement Time (s):</label>
+                        <input type="number" id="measure-time-3up" value="9" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>Log Time (s):</label>
+                        <input type="number" id="log-time-3up" value="8" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>PTB Time (s):</label>
+                        <input type="number" id="ptb-time-3up" value="1" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>PTB Retry Count:</label>
+                        <input type="number" id="ptb-retry-3up" value="3" min="1" max="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Belt Time (s):</label>
+                        <input type="number" id="belt-time-3up" value="3" min="1" max="60">
+                    </div>
+                    <div class="input-group">
+                        <label>Operator Unload Time (s):</label>
+                        <input type="number" id="op-unload-time-3up" value="2" min="1" max="60">
+                    </div>
+                </div>
+
+                <div class="visualization-panel">
+                    <h3>Turn Table Flow</h3>
+                    <div id="flow-viz-3up" class="turntable-diagram">
+                        <div class="turntable-center">
+                            <div class="turntable-icon">🔄</div>
+                        </div>
+                        
+                        <div class="station turntable-station" id="station1-3up" style="top: 20%; left: 50%;">
+                            <div class="station-icon">👤</div>
+                            <div class="station-label">Station 1<br>Load</div>
+                            <div class="station-count">0</div>
+                        </div>
+                        
+                        <div class="station turntable-station" id="station2-3up" style="top: 60%; left: 75%;">
+                            <div class="station-icon">📊</div>
+                            <div class="station-label">Station 2<br>AOI/Measurement</div>
+                            <div class="station-count">0</div>
+                        </div>
+                        
+                        <div class="station turntable-station" id="station3-3up" style="top: 60%; left: 25%;">
+                            <div class="station-icon">💾</div>
+                            <div class="station-label">Station 3<br>Data Logging</div>
+                            <div class="station-count">0</div>
+                        </div>
+                        
+                        <div class="container-queue" id="container-queue-3up">
+                            <div class="queue-label">Container Queue</div>
+                            <div class="queue-count">3</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dut-flow-paths">
+                        <div class="flow-legend">
+                            <div class="path-legend good">Good DUT → Load → AOI → Log → Unload</div>
+                            <div class="path-legend relit">Re-lit DUT → Rework → Load → AOI → Log → Unload</div>
+                            <div class="path-legend bad">Bad DUT → PTB Retry → Exit</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-panel">
+                    <h3>Output Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <label>Total Time:</label>
+                            <span id="total-time-3up">0.0 s</span>
+                        </div>
+                        <div class="metric">
+                            <label>Completed Load:</label>
+                            <span id="completed-load-3up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Completed AOI:</label>
+                            <span id="completed-aoi-3up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Completed Logging:</label>
+                            <span id="completed-log-3up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Completed Unload:</label>
+                            <span id="completed-unload-3up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Total Completed DUT:</label>
+                            <span id="total-completed-3up">0</span>
+                        </div>
+                        <div class="metric">
+                            <label>Measurement Utilization:</label>
+                            <span id="measure-util-3up">0.0%</span>
+                        </div>
+                        <div class="metric">
+                            <label>Downtime Percentage:</label>
+                            <span id="downtime-3up">0.0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Virtual Station Simulations - Web Implementation of JaamSim Manufacturing Models</p>
+    </footer>
+
+    <script src="js/simulation-engine.js"></script>
+    <script src="js/1up-simulation.js"></script>
+    <script src="js/3up-simulation.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

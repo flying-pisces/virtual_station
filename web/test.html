@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .console {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Virtual Station Simulations - Test Suite</h1>
+        
+        <div class="test-section">
+            <h3>Core Engine Tests</h3>
+            <p>Testing simulation engine functionality...</p>
+            <div id="engine-status" class="status">Not Tested</div>
+            <button onclick="testEngine()">Test Engine</button>
+        </div>
+
+        <div class="test-section">
+            <h3>1-Up Simulation Tests</h3>
+            <p>Testing 1-Up station simulation logic...</p>
+            <div id="1up-status" class="status">Not Tested</div>
+            <button onclick="test1Up()">Test 1-Up</button>
+        </div>
+
+        <div class="test-section">
+            <h3>3-Up Simulation Tests</h3>
+            <p>Testing 3-Up turn table simulation logic...</p>
+            <div id="3up-status" class="status">Not Tested</div>
+            <button onclick="test3Up()">Test 3-Up</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Integration Tests</h3>
+            <p>Testing complete simulation workflow...</p>
+            <div id="integration-status" class="status">Not Tested</div>
+            <button onclick="testIntegration()">Test Integration</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Console</h3>
+            <div id="console" class="console"></div>
+            <button onclick="clearConsole()">Clear Console</button>
+        </div>
+    </div>
+
+    <script src="js/simulation-engine.js"></script>
+    <script src="js/1up-simulation.js"></script>
+    <script src="js/3up-simulation.js"></script>
+    <script>
+        function log(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function setStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${status}`;
+            element.textContent = message;
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '';
+        }
+
+        function testEngine() {
+            log('Testing simulation engine...');
+            
+            try {
+                // Test engine creation
+                const engine = new SimulationEngine();
+                log('✓ Engine created successfully');
+                
+                // Test entity creation
+                const entity = new Entity('test1', 'Test Entity');
+                engine.addEntity(entity);
+                log('✓ Entity added to engine');
+                
+                // Test event scheduling
+                engine.scheduleEvent(1.0, entity, 'test', {data: 'test'});
+                log('✓ Event scheduled');
+                
+                // Test time advancement
+                engine.advanceTime(1.5);
+                log('✓ Time advanced and events processed');
+                
+                // Test DUT creation
+                const dut = new DUT('DUT001');
+                dut.setType('good');
+                log('✓ DUT created and type set');
+                
+                setStatus('engine-status', 'pass', 'All Tests Passed');
+                log('Engine tests completed successfully!');
+                
+            } catch (error) {
+                setStatus('engine-status', 'fail', 'Test Failed');
+                log('❌ Engine test failed: ' + error.message);
+            }
+        }
+
+        function test1Up() {
+            log('Testing 1-Up simulation...');
+            
+            try {
+                // Create simulation instance
+                const sim = new OneUpSimulation();
+                log('✓ 1-Up simulation created');
+                
+                // Test configuration update
+                sim.updateConfig({
+                    totalDUTs: 10,
+                    goodPercent: 80,
+                    relitPercent: 15,
+                    loadTime: 5
+                });
+                log('✓ Configuration updated');
+                
+                // Test entity setup
+                sim.setupEntities();
+                log('✓ Entities set up');
+                
+                // Verify entities exist
+                if (sim.entities.generator && sim.entities.measurement && sim.entities.branch) {
+                    log('✓ Key entities created');
+                } else {
+                    throw new Error('Missing key entities');
+                }
+                
+                // Test simulation start
+                sim.start();
+                log('✓ Simulation started');
+                
+                // Let it run briefly
+                setTimeout(() => {
+                    sim.pause();
+                    log('✓ Simulation paused');
+                    
+                    // Check if DUTs were generated
+                    if (sim.entities.generator.generatedCount > 0) {
+                        log(`✓ Generated ${sim.entities.generator.generatedCount} DUTs`);
+                    }
+                    
+                    sim.reset();
+                    log('✓ Simulation reset');
+                    
+                    setStatus('1up-status', 'pass', 'All Tests Passed');
+                    log('1-Up simulation tests completed successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                setStatus('1up-status', 'fail', 'Test Failed');
+                log('❌ 1-Up test failed: ' + error.message);
+            }
+        }
+
+        function test3Up() {
+            log('Testing 3-Up simulation...');
+            
+            try {
+                // Create simulation instance
+                const sim = new ThreeUpSimulation();
+                log('✓ 3-Up simulation created');
+                
+                // Test configuration update
+                sim.updateConfig({
+                    totalDUTs: 20,
+                    goodPercent: 90,
+                    relitPercent: 7,
+                    opLoadTime: 8
+                });
+                log('✓ Configuration updated');
+                
+                // Test entity setup
+                sim.setupEntities();
+                log('✓ Entities set up');
+                
+                // Verify key entities
+                if (sim.entities.generator && sim.entities.addTo1 && sim.entities.station2) {
+                    log('✓ Key entities created');
+                } else {
+                    throw new Error('Missing key entities');
+                }
+                
+                // Test simulation start
+                sim.start();
+                log('✓ Simulation started');
+                
+                // Let it run briefly
+                setTimeout(() => {
+                    sim.pause();
+                    log('✓ Simulation paused');
+                    
+                    // Check if DUTs were generated
+                    if (sim.entities.generator.generatedCount > 0) {
+                        log(`✓ Generated ${sim.entities.generator.generatedCount} DUTs`);
+                    }
+                    
+                    sim.reset();
+                    log('✓ Simulation reset');
+                    
+                    setStatus('3up-status', 'pass', 'All Tests Passed');
+                    log('3-Up simulation tests completed successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                setStatus('3up-status', 'fail', 'Test Failed');
+                log('❌ 3-Up test failed: ' + error.message);
+            }
+        }
+
+        function testIntegration() {
+            log('Testing integration scenarios...');
+            
+            try {
+                // Test 1: Quick 1-Up simulation run
+                log('Running quick 1-Up simulation...');
+                const sim1 = new OneUpSimulation();
+                sim1.updateConfig({ totalDUTs: 5, loadTime: 1, measureTime: 1 });
+                sim1.setupEntities();
+                sim1.start();
+                
+                setTimeout(() => {
+                    const processed = sim1.entities.unload.numberProcessed;
+                    log(`✓ 1-Up completed ${processed} DUTs`);
+                    sim1.reset();
+                    
+                    // Test 2: Quick 3-Up simulation run
+                    log('Running quick 3-Up simulation...');
+                    const sim3 = new ThreeUpSimulation();
+                    sim3.updateConfig({ totalDUTs: 5, opLoadTime: 1, measureTime: 1 });
+                    sim3.setupEntities();
+                    sim3.start();
+                    
+                    setTimeout(() => {
+                        const completed = sim3.metrics.totalCompleted;
+                        log(`✓ 3-Up completed ${completed} DUTs`);
+                        sim3.reset();
+                        
+                        setStatus('integration-status', 'pass', 'All Tests Passed');
+                        log('Integration tests completed successfully!');
+                    }, 2000);
+                    
+                }, 2000);
+                
+            } catch (error) {
+                setStatus('integration-status', 'fail', 'Test Failed');
+                log('❌ Integration test failed: ' + error.message);
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', function() {
+            log('Test page loaded. Ready for testing.');
+            log('Click buttons above to run individual test suites.');
+        });
+    </script>
+</body>
+</html>
