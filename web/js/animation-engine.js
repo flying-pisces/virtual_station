@@ -236,6 +236,10 @@ class AnimationEngine {
             if (dut.isMoving && dut.path && dut.pathIndex < dut.path.length - 1) {
                 dut.progress += dut.speed * deltaTime;
                 
+                // Add to trail
+                if (dut.trail.length > 10) dut.trail.shift();
+                dut.trail.push({ x: dut.x, y: dut.y });
+                
                 if (dut.progress >= 1.0) {
                     dut.pathIndex++;
                     dut.progress = 0.0;
@@ -244,6 +248,7 @@ class AnimationEngine {
                         dut.isMoving = false;
                         dut.x = dut.path[dut.path.length - 1].x;
                         dut.y = dut.path[dut.path.length - 1].y;
+                        dut.arrivedAtStation = true;
                     }
                 }
                 
@@ -253,12 +258,29 @@ class AnimationEngine {
                     dut.x = start.x + (end.x - start.x) * dut.progress;
                     dut.y = start.y + (end.y - start.y) * dut.progress;
                 }
+            } else if (!dut.isMoving && dut.isBeingProcessed) {
+                // Add processing animation (vibration/pulsing)
+                dut.processingAnimation = (dut.processingAnimation || 0) + deltaTime * 10;
+                dut.pulseScale = 1 + Math.sin(dut.processingAnimation) * 0.1;
             }
         });
 
+        // Update conveyor belt animation
+        this.conveyorOffset = (this.conveyorOffset || 0) + deltaTime * 30;
+        if (this.conveyorOffset > 20) this.conveyorOffset = 0;
+
         // Update turn table rotation for 3-up
         if (this.simulationType === '3up') {
-            this.turnTableAngle += deltaTime * 0.5; // Slow rotation
+            this.turnTableAngle += deltaTime * 0.3; // Visible rotation
+            
+            // Update DUTs on turn table
+            this.duts.forEach(dut => {
+                if (dut.onTurnTable) {
+                    const angle = dut.turnTableAngle + this.turnTableAngle;
+                    dut.x = this.turnTableCenter.x + dut.turnTableRadius * Math.cos(angle);
+                    dut.y = this.turnTableCenter.y + dut.turnTableRadius * Math.sin(angle);
+                }
+            });
         }
 
         // Update particles (sparks, effects)
@@ -329,19 +351,34 @@ class AnimationEngine {
     }
 
     drawConveyors() {
-        this.ctx.strokeStyle = '#7f8c8d';
-        this.ctx.lineWidth = 4;
-        
         this.conveyors.forEach(conveyor => {
             if (conveyor.path && conveyor.path.length > 1) {
+                // Draw conveyor belt base
+                this.ctx.strokeStyle = '#34495e';
+                this.ctx.lineWidth = 12;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                
                 this.ctx.beginPath();
                 this.ctx.moveTo(conveyor.path[0].x, conveyor.path[0].y);
-                
                 for (let i = 1; i < conveyor.path.length; i++) {
                     this.ctx.lineTo(conveyor.path[i].x, conveyor.path[i].y);
                 }
-                
                 this.ctx.stroke();
+                
+                // Draw moving belt surface
+                this.ctx.strokeStyle = '#7f8c8d';
+                this.ctx.lineWidth = 8;
+                this.ctx.setLineDash([10, 5]);
+                this.ctx.lineDashOffset = -this.conveyorOffset || 0;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(conveyor.path[0].x, conveyor.path[0].y);
+                for (let i = 1; i < conveyor.path.length; i++) {
+                    this.ctx.lineTo(conveyor.path[i].x, conveyor.path[i].y);
+                }
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
                 
                 // Draw direction arrows
                 this.drawArrows(conveyor.path);
@@ -446,37 +483,75 @@ class AnimationEngine {
 
     drawDUTs() {
         this.duts.forEach(dut => {
-            // Draw DUT body
-            const size = 12;
-            this.ctx.fillStyle = dut.color;
+            // Draw trail if moving
+            if (dut.isMoving && dut.trail && dut.trail.length > 1) {
+                this.ctx.strokeStyle = dut.color + '40'; // Semi-transparent
+                this.ctx.lineWidth = 4;
+                this.ctx.lineCap = 'round';
+                this.ctx.beginPath();
+                this.ctx.moveTo(dut.trail[0].x, dut.trail[0].y);
+                for (let i = 1; i < dut.trail.length; i++) {
+                    const alpha = i / dut.trail.length;
+                    this.ctx.globalAlpha = alpha * 0.5;
+                    this.ctx.lineTo(dut.trail[i].x, dut.trail[i].y);
+                }
+                this.ctx.stroke();
+                this.ctx.globalAlpha = 1.0;
+            }
+            
+            // Apply processing animation scale
+            const scale = dut.pulseScale || 1.0;
+            const size = 18 * scale; // Larger, more visible DUTs
+            
+            // Draw DUT shadow
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            this.ctx.beginPath();
+            this.ctx.arc(dut.x + 2, dut.y + 2, size, 0, 2 * Math.PI);
+            this.ctx.fill();
+            
+            // Draw DUT body with gradient
+            const gradient = this.ctx.createRadialGradient(dut.x - size/3, dut.y - size/3, 0, dut.x, dut.y, size);
+            gradient.addColorStop(0, this.getLighterColor(dut.color));
+            gradient.addColorStop(1, dut.color);
+            
+            this.ctx.fillStyle = gradient;
             this.ctx.beginPath();
             this.ctx.arc(dut.x, dut.y, size, 0, 2 * Math.PI);
             this.ctx.fill();
             
             // Draw DUT border
             this.ctx.strokeStyle = '#2c3e50';
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = 3;
             this.ctx.stroke();
             
-            // Draw DUT ID
+            // Draw DUT ID with better visibility
             this.ctx.fillStyle = 'white';
-            this.ctx.font = 'bold 8px Arial';
+            this.ctx.font = 'bold 10px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
+            this.ctx.strokeStyle = '#2c3e50';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeText(dut.id.slice(-2), dut.x, dut.y);
             this.ctx.fillText(dut.id.slice(-2), dut.x, dut.y);
             
-            // Draw trail if moving
-            if (dut.isMoving && dut.trail && dut.trail.length > 1) {
-                this.ctx.strokeStyle = dut.color + '60'; // Semi-transparent
-                this.ctx.lineWidth = 3;
+            // Draw status indicator for processing DUTs
+            if (dut.isBeingProcessed) {
+                this.ctx.fillStyle = '#f39c12';
                 this.ctx.beginPath();
-                this.ctx.moveTo(dut.trail[0].x, dut.trail[0].y);
-                for (let i = 1; i < dut.trail.length; i++) {
-                    this.ctx.lineTo(dut.trail[i].x, dut.trail[i].y);
-                }
-                this.ctx.stroke();
+                this.ctx.arc(dut.x + size - 5, dut.y - size + 5, 4, 0, 2 * Math.PI);
+                this.ctx.fill();
             }
         });
+    }
+
+    getLighterColor(color) {
+        // Convert hex to lighter version
+        const colorMap = {
+            '#27ae60': '#58d68d',
+            '#f39c12': '#f8c471',
+            '#e74c3c': '#ec7063'
+        };
+        return colorMap[color] || color;
     }
 
     drawParticles() {
@@ -502,18 +577,22 @@ class AnimationEngine {
         const dut = {
             id: dutData.id,
             type: dutData.type,
-            x: startStation.x,
-            y: startStation.y,
+            x: startStation.x + (Math.random() - 0.5) * 20, // Add some randomness
+            y: startStation.y + (Math.random() - 0.5) * 20,
             color: color,
             isMoving: false,
+            isBeingProcessed: false,
             path: null,
             pathIndex: 0,
             progress: 0,
-            speed: 50, // pixels per second
-            trail: []
+            speed: 80, // Faster movement for better visibility
+            trail: [],
+            pulseScale: 1.0,
+            onTurnTable: false
         };
         
         this.duts.push(dut);
+        this.addParticleEffect(dut.x, dut.y, color); // Spawn effect
         return dut;
     }
 
@@ -550,17 +629,37 @@ class AnimationEngine {
         }
     }
 
+    startProcessingDUT(dutId, stationId) {
+        const dut = this.duts.find(d => d.id === dutId);
+        const station = this.stations.find(s => s.id === stationId);
+        if (dut && station) {
+            dut.isBeingProcessed = true;
+            dut.isMoving = false;
+            dut.x = station.x;
+            dut.y = station.y;
+            this.addParticleEffect(dut.x, dut.y, '#f39c12'); // Processing effect
+        }
+    }
+
+    stopProcessingDUT(dutId) {
+        const dut = this.duts.find(d => d.id === dutId);
+        if (dut) {
+            dut.isBeingProcessed = false;
+            dut.pulseScale = 1.0;
+        }
+    }
+
     addParticleEffect(x, y, color) {
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 12; i++) {
             this.particles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 100,
-                vy: (Math.random() - 0.5) * 100,
+                x: x + (Math.random() - 0.5) * 20,
+                y: y + (Math.random() - 0.5) * 20,
+                vx: (Math.random() - 0.5) * 120,
+                vy: (Math.random() - 0.5) * 120,
                 color: color,
-                size: Math.random() * 4 + 2,
-                life: Math.random() * 2 + 1,
-                maxLife: Math.random() * 2 + 1,
+                size: Math.random() * 6 + 2,
+                life: Math.random() * 1.5 + 0.5,
+                maxLife: Math.random() * 1.5 + 0.5,
                 alpha: 1.0
             });
         }

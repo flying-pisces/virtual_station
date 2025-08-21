@@ -42,6 +42,10 @@ function setupUIEventListeners() {
         simulations['1up'].handleReset();
         updateControlButtons('1up', 'stopped');
     });
+    
+    document.getElementById('demo-1up').addEventListener('click', () => {
+        startDemoMode('1up');
+    });
 
     // Speed control - 1up
     document.getElementById('speed-slider-1up').addEventListener('input', (e) => {
@@ -66,6 +70,10 @@ function setupUIEventListeners() {
     document.getElementById('reset-3up').addEventListener('click', () => {
         simulations['3up'].handleReset();
         updateControlButtons('3up', 'stopped');
+    });
+    
+    document.getElementById('demo-3up').addEventListener('click', () => {
+        startDemoMode('3up');
     });
 
     // Speed control - 3up
@@ -147,6 +155,50 @@ function updateControlButtons(simType, state) {
             resetBtn.disabled = false;
             break;
     }
+}
+
+// Demo mode function
+function startDemoMode(simType) {
+    const sim = simulations[simType];
+    
+    // Set fast demo parameters
+    if (simType === '1up') {
+        sim.updateConfig({
+            totalDUTs: 50,
+            goodPercent: 70,
+            relitPercent: 20,
+            loadTime: 2,
+            measureTime: 3,
+            ptbTime: 1,
+            ptbRetry: 2,
+            unloadTime: 1
+        });
+    } else {
+        sim.updateConfig({
+            totalDUTs: 100,
+            goodPercent: 80,
+            relitPercent: 15,
+            opLoadTime: 3,
+            measureTime: 4,
+            logTime: 2,
+            ptbTime: 0.5,
+            ptbRetry: 2,
+            beltTime: 1,
+            opUnloadTime: 1
+        });
+    }
+    
+    // Set high speed for demo
+    sim.handleSpeedChange(8);
+    document.getElementById(`speed-slider-${simType}`).value = 8;
+    document.getElementById(`speed-${simType}`).textContent = '8x';
+    
+    // Start simulation
+    sim.handleStart();
+    updateControlButtons(simType, 'running');
+    
+    // Show demo notification
+    alert(`Demo Mode Started!\n\nWatch the ${simType === '1up' ? '1-Up Station' : '3-Up Turn Table'} animation showing continuous DUT flow.\n\nFeatures:\n• Animated DUTs moving through stations\n• Color-coded quality types (Green=Good, Orange=Re-lit, Red=Failed)\n• Moving conveyor belts\n• Processing animations\n• Particle effects\n\nSpeed: 8x for fast demonstration`);
 }
 
 // Utility functions

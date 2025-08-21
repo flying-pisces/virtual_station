@@ -253,6 +253,23 @@ class ThreeUpSimulation {
             this.updateUI();
         });
 
+        this.engine.on('dutGenerated', (data) => {
+            // Add DUT to animation for 3-up system
+            if (this.animationEngine) {
+                const animDUT = this.animationEngine.addDUT(data.dut);
+                this.dutTracker.set(data.dut.id, {
+                    dut: data.dut,
+                    animDUT: animDUT,
+                    currentStation: 'station1'
+                });
+                
+                // Immediately move DUT to first station
+                setTimeout(() => {
+                    this.animationEngine.moveDUT(data.dut.id, 'station1', 'station2');
+                }, 200);
+            }
+        });
+
         this.engine.on('dutFinishProcessing', (data) => {
             // Update completion metrics based on which server finished
             switch(data.server.id) {
@@ -371,6 +388,22 @@ class ThreeUpSimulation {
         this.entities.generator.start();
         this.entities.containerGenerator.start();
         this.engine.start();
+        
+        // Force initial DUT generation for immediate visual feedback
+        this.generateInitialDUTs();
+    }
+
+    generateInitialDUTs() {
+        // Generate a few DUTs immediately to show animation
+        setTimeout(() => {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    if (this.entities.generator && this.entities.generator.generatedCount < this.config.totalDUTs) {
+                        this.entities.generator.generateNextDUT();
+                    }
+                }, i * 1500); // Generate every 1.5 seconds
+            }
+        }, 500);
     }
 
     pause() {

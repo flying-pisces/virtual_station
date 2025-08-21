@@ -143,6 +143,15 @@ header p {
     background: #c0392b;
 }
 
+.control-btn.demo {
+    background: #9b59b6;
+    color: white;
+}
+
+.control-btn.demo:hover {
+    background: #8e44ad;
+}
+
 .speed-control {
     display: flex;
     align-items: center;

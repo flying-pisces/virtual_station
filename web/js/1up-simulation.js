@@ -133,6 +133,11 @@ class OneUpSimulation {
                     animDUT: animDUT,
                     currentStation: 'generator'
                 });
+                
+                // Immediately move DUT to first conveyor
+                setTimeout(() => {
+                    this.animationEngine.moveDUT(data.dut.id, 'generator', 'branch');
+                }, 100);
             }
         });
 
@@ -158,14 +163,22 @@ class OneUpSimulation {
 
         this.engine.on('dutStartProcessing', (data) => {
             this.updateStationVisuals(data.server.id, 'active');
+            
+            // Start processing animation
+            if (this.animationEngine && this.dutTracker.has(data.dut.id)) {
+                const stationId = this.getStationIdFromComponent(data.server);
+                this.animationEngine.startProcessingDUT(data.dut.id, stationId);
+            }
         });
 
         this.engine.on('dutFinishProcessing', (data) => {
             this.updateStationVisuals(data.server.id, 'idle');
             this.updateStationCount(data.server.id, data.server.numberProcessed);
             
-            // Animate DUT to next station
+            // Stop processing animation and move to next station
             if (this.animationEngine && this.dutTracker.has(data.dut.id)) {
+                this.animationEngine.stopProcessingDUT(data.dut.id);
+                
                 const tracker = this.dutTracker.get(data.dut.id);
                 const fromStation = data.server.id;
                 const toStation = this.getStationIdFromComponent(data.server.nextComponent);
@@ -287,6 +300,22 @@ class OneUpSimulation {
         
         this.entities.generator.start();
         this.engine.start();
+        
+        // Force initial DUT generation for immediate visual feedback
+        this.generateInitialDUTs();
+    }
+
+    generateInitialDUTs() {
+        // Generate a few DUTs immediately to show animation
+        setTimeout(() => {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    if (this.entities.generator && this.entities.generator.generatedCount < this.config.totalDUTs) {
+                        this.entities.generator.generateNextDUT();
+                    }
+                }, i * 2000); // Generate every 2 seconds
+            }
+        }, 500);
     }
 
     pause() {
